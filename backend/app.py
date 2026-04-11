@@ -1,41 +1,75 @@
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from pymongo import MongoClient
 
 app = Flask(__name__)
-CORS(app)  # 🔥 IMPORTANT
+CORS(app)
 
-# 🔥 REGISTER API
+client = MongoClient("mongodb://localhost:27017/")
+db = client["userDB"]
+users_collection = db["users"]
+
+# 🔹 REGISTER
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
 
-    print("Received Data:", data)
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+
+    existing = users_collection.find_one({
+        "$or": [{"username": username}, {"email": email}]
+    })
+
+    if existing:
+        return jsonify({"status": "exists"})
+
+    users_collection.insert_one({
+        "username": username,
+        "email": email,
+        "password": password
+    })
 
     return jsonify({"status": "saved"})
 
 
-# 🔥 LOGIN API
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
 
-    email = data.get("email")
+    username = data.get("username")
     password = data.get("password")
 
-    # simple check
-    if email and password:
+    user = users_collection.find_one({
+        "username": username,
+        "password": password
+    })
+
+    if user:
         return jsonify({"status": "success"})
     else:
-        return jsonify({"status": "failed"})
+        return jsonify({"status": "fail"})
 
 
-# 🔥 MONITOR API
-@app.route('/monitor', methods=['POST'])
-def monitor():
+@app.route('/forgot-password', methods=['POST'])
+def forgot_password():
     data = request.json
-    print("Live Data:", data)
 
-    return jsonify({"status": "ok"})
+    email = data.get("email")
+    new_password = data.get("newPassword")
+
+    user = users_collection.find_one({"email": email})
+
+    if user:
+        users_collection.update_one(
+            {"email": email},
+            {"$set": {"password": new_password}}
+        )
+        return jsonify({"status": "success"})
+    else:
+        return jsonify({"status": "fail"})
 
 
 if __name__ == "__main__":

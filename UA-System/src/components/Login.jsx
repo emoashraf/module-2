@@ -1,268 +1,133 @@
-
-
-import React, { useState, useEffect, useRef } from "react";
-import "./Login.css";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("user");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isRegister, setIsRegister] = useState(false);
+  const [remember, setRemember] = useState(false);
 
-  const [typingText, setTypingText] = useState("");
-  const [keystrokes, setKeystrokes] = useState([]);
-  const [mouseMoves, setMouseMoves] = useState([]);
-  const [keyDownTime, setKeyDownTime] = useState({});
-
-  const [isTracking, setIsTracking] = useState(false);
-  const intervalRef = useRef(null);
-
-  // 🔥 KEYBOARD TRACK
-  const handleKeyDown = (e) => {
-    if (!isTracking) return;
-
-    setKeyDownTime((prev) => ({
-      ...prev,
-      [e.key]: Date.now()
-    }));
-  };
-
-  const handleKeyUp = (e) => {
-    if (!isTracking) return;
-
-    const releaseTime = Date.now();
-    const pressTime = keyDownTime[e.key];
-
-    if (pressTime) {
-      const holdTime = releaseTime - pressTime;
-
-      setKeystrokes((prev) => [
-        ...prev,
-        { key: e.key, holdTime, time: releaseTime }
-      ]);
-    }
-  };
-
-  // 🔥 MOUSE TRACK
-  const handleMouseMove = (e) => {
-    if (!isTracking) return;
-
-    setMouseMoves((prev) => [
-      ...prev,
-      {
-        x: e.clientX,
-        y: e.clientY,
-        time: Date.now()
-      }
-    ]);
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousemove", handleMouseMove);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [isTracking]);
-
-  // 🔥 REGISTER
-  const handleRegister = async () => {
-    if (!email || !password || !typingText) {
-      toast("Fill all details");
-      return;
-    }
-
-    setIsTracking(false);
-
-    const data = {
-      email,
-      password,
-      typedText: typingText,
-      keystrokes,
-      mouseMoves
-    };
-
-    try {
-      const res = await fetch("http://localhost:5000/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-
-      if (result.status === "saved") {
-        toast.success("Registered Successfully ✅", {
-          onClose: () => {
-            setIsRegister(false); // 🔥 after toast close
-
-            setTypingText("");
-            setKeystrokes([]);
-            setMouseMoves([]);
-          }
-        });
-
-      } else {
-        toast("Register failed ❌");
-      }
-
-    } catch (err) {
-      toast("Server error ❌");
-    }
-  };
-
-  // 🔥 LOGIN
   const handleLogin = async () => {
-    if (!email || !password) {
-      toast("Enter details");
+    if (!username || !password) {
+      toast.error("Please fill all fields ❗");
       return;
     }
-
+    if (role === "admin") {
+      if (username === "admin" && password === "admin123") {
+        toast.success("Admin Login Success ✅", {
+          // onClose: () => navigate("/dashboard")
+          onClose: () => navigate("/app/dashboard")
+        });
+      } else {
+        toast.error("Invalid Admin Credentials ❌");
+      }
+      return;
+    }
     try {
       const res = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ username, password })
       });
 
       const result = await res.json();
 
       if (result.status === "success") {
-        toast.success("Login success ✅", {
-          onClose: () => {
-            setIsTracking(true);
-            navigate("/dashboard");
-          }
+       
+              const userData = {
+        name: result.name || username,  
+        email: result.email || `${username}@mail.com`,
+        role: "user"
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+        toast.success("Login successful ✅", {
+          onClose: () => navigate("/app/dashboard")
         });
-
-        if (!intervalRef.current) {
-          intervalRef.current = setInterval(async () => {
-            const data = {
-              email,
-              keystrokes,
-              mouseMoves
-            };
-
-            await fetch("http://localhost:5000/monitor", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(data)
-            });
-
-            setKeystrokes([]);
-            setMouseMoves([]);
-          }, 10000);
-        }
-
       } else {
-        toast("Login failed ❌");
+        toast.error("Invalid username or password ❌");
       }
-
-    } catch (err) {
-      toast("Server error ❌");
+    } catch {
+      toast.error("Server error ❌");
     }
   };
 
   return (
-    <div className="login-container">
-      <h2>{isRegister ? "Register" : "Login"}</h2>
+    <div className="login-page">
+    <div className="login-wrapper">
+      <div className="toggle">
+        <span
+          className={role === "user" ? "active" : ""}
+          onClick={() => setRole("user")}
+        >
+          User
+        </span>
 
-      <input
-        type="text"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      {isRegister && (
-        <>
-          <p style={{ color: "orange" }}>
-            Type here (keyboard + mouse will be tracked)
+        <span
+          className={role === "admin" ? "active" : ""}
+          onClick={() => setRole("admin")}
+        >
+          Admin
+        </span>
+      </div>
+      <div className="login-container">
+        <h2>{role === "admin" ? "Admin Login" : "User Login"}</h2>
+        <input
+          type="text"
+          placeholder={role === "admin" ? "Admin Username" : "Username"}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder={role === "admin" ? "Admin Password" : "Password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div className="options-row">
+          <label>
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={() => setRemember(!remember)}
+            />
+            Remember Me
+          </label>
+          <span
+            className="forgot"
+            onClick={() => navigate("/forgot-password")}
+          >
+            Forgot Password?
+          </span>
+        </div>
+        <button onClick={handleLogin}>
+          {role === "admin" ? "Admin Login" : "Login"}
+        </button>
+        {role === "user" && (
+          <p className="bottom-text">
+            New user?{" "}
+            <span onClick={() => navigate("/register")}>
+              Register
+            </span>
           </p>
-
-          <textarea
-            placeholder="Type something..."
-            value={typingText}
-            onChange={(e) => {
-              setTypingText(e.target.value);
-              setIsTracking(true);
-            }}
-            onKeyDown={handleKeyDown}
-            onKeyUp={handleKeyUp}
-            rows="4"
-            style={{ width: "100%", marginTop: "10px" }}
-          />
-        </>
-      )}
-
-      <button onClick={isRegister ? handleRegister : handleLogin}>
-        {isRegister ? "Register" : "Login"}
-      </button>
-
-      <p
-        onClick={() => setIsRegister(!isRegister)}
-        style={{ cursor: "pointer" }}
-      >
-        {isRegister ? "Already user? Login" : "New user? Register"}
-      </p>
-
-      <p>🔒 Continuous behavior monitoring enabled</p>
-
-      {/* 🔥 TOAST CONFIG */}
-      {/* <ToastContainer
+        )}
+      </div>
+      <ToastContainer
         position="top-right"
         autoClose={3000}
-        hideProgressBar
         closeButton={false}
         pauseOnHover={false}
         draggable={false}
-        theme="light"
-      /> */}
-      <ToastContainer position="top-right" autoClose={3000}
-      closeButton={false}
-        pauseOnHover={false}
-        draggable={false}
-       />
+      />
+    </div>
     </div>
   );
 }
-
-
-const styles = {
-  container: {
-    width: "300px",
-    margin: "100px auto",
-    textAlign: "center"
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    margin: "10px 0"
-  },
-  button: {
-    width: "100%",
-    padding: "10px",
-    background: "#007bff",
-    color: "white",
-    border: "none"
-  }
-};
-
 export default Login;
