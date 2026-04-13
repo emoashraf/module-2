@@ -8,9 +8,10 @@ CORS(app)
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["userDB"]
-users_collection = db["users"]
 
-# 🔹 REGISTER
+users_collection = db["users"]
+training_collection = db["training_data"]
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
@@ -33,7 +34,6 @@ def register():
     })
 
     return jsonify({"status": "saved"})
-
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -71,6 +71,18 @@ def forgot_password():
     else:
         return jsonify({"status": "fail"})
 
+@app.route('/training-data', methods=['POST'])
+def training_data():
+    data = request.json
+
+    print("📥 Received Training Data")
+
+    training_collection.insert_one(data)
+
+    return jsonify({
+        "status": "saved",
+        "message": "Training data stored successfully"
+    })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

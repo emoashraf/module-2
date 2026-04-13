@@ -16,15 +16,11 @@ function Logout() {
     <div className="logout-page">
   <div className="logout-card">
 
-    <h2>⚠️ Logout</h2>
+    <h2 className="logout-head">⚠️ Logout</h2>
 
-    <p>
-      Are you sure you want to logout, <b>{user?.name}</b>?
-    </p>
+    <p>Are you sure you want to logout, <b>{user?.name}</b>? </p>
 
-    <p className="warning">
-      ⚠️ Once you logout, you will NOT be able to login again.
-    </p>
+    <p className="warning">⚠️ Once you logout, you will NOT be able to login again.</p>
 
     <div className="btns">
       <button onClick={handleCancel}>Cancel</button>

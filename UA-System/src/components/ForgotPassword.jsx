@@ -43,36 +43,46 @@ function ForgotPassword() {
     }
   };
 
+  
   return (
-    <div className="login-container">
-      <h2>Reset Password</h2>
+  <div className="login-page">
+    <div className="login-wrapper">
+      <div className="login-container">
 
-      <input
-        type="text"
-        placeholder="Enter Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <h2>Reset Password</h2>
 
-      <input
-        type="password"
-        placeholder="New Password"
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
-      />
+        <input
+          type="text"
+          placeholder="Enter Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      <input
-        type="password"
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-      />
+        <input
+          type="password"
+          placeholder="New Password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
 
-      <button onClick={handleReset}>Reset Password</button>
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
 
-      <p className="back-login" onClick={() => navigate("/")}>← Back to Login</p>
-      <ToastContainer />
+        <button onClick={handleReset}>Reset Password</button>
+
+        <p className="back-login" onClick={() => navigate("/")}>
+          ← Back to Login
+        </p>
+
+        <ToastContainer />
+
+      </div>
     </div>
-  );
+  </div>
+);
 }
 export default ForgotPassword;

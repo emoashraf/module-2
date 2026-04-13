@@ -54,3 +54,9 @@ textarea {
 
 
 }
+
+.disabled-mode {
+  pointer-events: none;
+  opacity: 0.4;
+  filter: grayscale(1);
+}
